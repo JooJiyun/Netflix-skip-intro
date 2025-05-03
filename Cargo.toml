@@ -1,0 +1,7 @@
+[package]
+name = "netflix_skip"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+uiautomation = "0.12.0"
