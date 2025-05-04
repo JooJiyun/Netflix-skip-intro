@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tray_icon::{
-    menu::{Menu, MenuEvent, MenuItem},
+    menu::{CheckMenuItem, Menu, MenuEvent, MenuItem},
     TrayIcon, TrayIconBuilder, TrayIconEvent,
 };
 use winit::{application::ApplicationHandler, event_loop::EventLoop};
@@ -15,14 +15,16 @@ enum UserEvent {
 
 struct Application {
     tray_icon: Option<TrayIcon>,
-    quit_tray_item: Option<MenuItem>,
+    quit_tray_item: MenuItem,
+    switch_tray_item: CheckMenuItem,
 }
 
 impl Application {
     fn new() -> Application {
         Application {
             tray_icon: None,
-            quit_tray_item: None,
+            quit_tray_item: MenuItem::new("exit", true, None),
+            switch_tray_item: CheckMenuItem::new("skip intro", true, true, None),
         }
     }
 
@@ -30,26 +32,18 @@ impl Application {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/resources/app-icon.ico");
         let icon = load_icon(std::path::Path::new(path));
 
+        // menu
+        let menu = Menu::new();
+        if let Err(err) = menu.append_items(&[&self.quit_tray_item, &self.switch_tray_item]) {
+            println!("{err:?}");
+        }
+
         TrayIconBuilder::new()
-            .with_menu(Box::new(self.new_tray_menu()))
+            .with_menu(Box::new(menu))
             .with_icon(icon)
             .with_title("netflix-skip-intro")
             .build()
             .unwrap()
-    }
-
-    fn new_tray_menu(&mut self) -> Menu {
-        let menu = Menu::new();
-        let item1 = MenuItem::new("item1", true, None);
-        let quit_item = MenuItem::new("종료", true, None);
-
-        if let Err(err) = menu.append_items(&[&quit_item, &item1]) {
-            println!("{err:?}");
-        }
-
-        self.quit_tray_item = Some(quit_item);
-
-        menu
     }
 }
 
@@ -75,13 +69,13 @@ impl ApplicationHandler<UserEvent> for Application {
     }
 
     fn user_event(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop, event: UserEvent) {
-        println!("{event:?}");
         match event {
             UserEvent::MenuEvent(menu_event) => {
-                if let Some(quit_item) = &self.quit_tray_item {
-                    if quit_item.id() == menu_event.id() {
-                        std::process::exit(0);
-                    }
+                if self.quit_tray_item.id() == menu_event.id() {
+                    std::process::exit(0);
+                } else if self.switch_tray_item.id() == menu_event.id() {
+                    self.switch_tray_item
+                        .set_checked(self.switch_tray_item.is_checked());
                 }
             }
             UserEvent::TrayIconEvent(_) => {}
