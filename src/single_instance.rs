@@ -10,7 +10,6 @@ use windows::{
 use crate::SINGLE_INSTANCE_MUTEX;
 
 pub fn check_single_instance() -> bool {
-    // run only single instance
     unsafe {
         let name = U16CString::from_str(SINGLE_INSTANCE_MUTEX).unwrap();
 
