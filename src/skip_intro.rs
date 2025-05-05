@@ -1,6 +1,7 @@
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 
+use uiautomation::inputs::Mouse;
 use uiautomation::Result;
 use uiautomation::{UIAutomation, UIElement};
 
@@ -51,7 +52,7 @@ fn click_skip_intro() -> Result<()> {
         for skip_button in skip_buttons {
             if skip_button.get_name()? == ELEMENT_NAME_SKIP_BUTTON {
                 println!("click skip button");
-                skip_button.click()?;
+                click_element(&skip_button)?;
             }
         }
     }
@@ -80,4 +81,18 @@ fn find_netflix_skip_button(root: &UIElement) -> Result<Vec<UIElement>> {
         .depth(3)
         .control_type(uiautomation::controls::ControlType::Button)
         .find_all()?)
+}
+
+fn click_element(element: &UIElement) -> Result<()> {
+    let click_prev_point = Mouse::get_cursor_pos()?;
+
+    element.try_focus();
+    let button_point = element.get_clickable_point()?;
+    if let Some(point) = button_point {
+        let mouse = Mouse::default().move_time(50);
+        mouse.click(point)?;
+        mouse.move_to(click_prev_point)?;
+    }
+
+    Ok(())
 }
