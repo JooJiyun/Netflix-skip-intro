@@ -1,39 +1,44 @@
-use uiautomation::Result;
-use uiautomation::{UIAutomation, UIElement};
+// Prevents additional console window on Windows in release
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-const NETFLIX_ELEMENT_NAME: &str = "넷플릭스";
-const NETFLIX_SKIP_BUTTON_NAME: &str = "오프닝 건너뛰기";
+use widestring::U16CString;
+use windows::{
+    core::PCWSTR,
+    Win32::{
+        Foundation::*,
+        System::Threading::{CreateMutexExW, CREATE_MUTEX_INITIAL_OWNER},
+    },
+};
+
+use netflix_skip::run_main;
 
 fn main() {
-    let automation: UIAutomation = UIAutomation::new().expect("failed create automation");
-    let netflix_roots = find_netflix_root_elements(&automation).expect("failed find netflix roots");
-    for netflix_root in netflix_roots {
-        let skip_buttons = find_netflix_skip_button(&automation, &netflix_root)
-            .expect("failed find netflix skip buttons");
-        for skip_button in skip_buttons {
-            skip_button.click().expect("failed click buttons");
+    // run only single instance
+    unsafe {
+        let name = U16CString::from_str("Global\\MyRustAppSingleton").unwrap();
+
+        let handle = CreateMutexExW(
+            Some(std::ptr::null()),
+            PCWSTR(name.as_ptr()),
+            CREATE_MUTEX_INITIAL_OWNER,
+            0,
+        )
+        .unwrap_or_else(|e| {
+            eprintln!("failed to create mutex handle: {:?}", e);
+            std::process::exit(1);
+        });
+
+        if handle.is_invalid() {
+            eprintln!("failed to create mutex : invalid handle");
+            return;
+        }
+
+        if GetLastError() == ERROR_ALREADY_EXISTS {
+            eprintln!("another instance is already running.");
+            return;
         }
     }
-}
 
-fn find_netflix_root_elements(automation: &UIAutomation) -> Result<Vec<UIElement>> {
-    let root = automation.get_root_element()?;
-    Ok(automation
-        .create_matcher()
-        .from(root)
-        .timeout(1000)
-        .depth(3)
-        .contains_name(NETFLIX_ELEMENT_NAME)
-        .find_all()?)
-}
-
-fn find_netflix_skip_button(automation: &UIAutomation, root: &UIElement) -> Result<Vec<UIElement>> {
-    Ok(automation
-        .create_matcher()
-        .from(root.clone())
-        .timeout(1000)
-        .depth(3)
-        .control_type(uiautomation::controls::ControlType::Button)
-        .contains_name(NETFLIX_SKIP_BUTTON_NAME)
-        .find_all()?)
+    println!("running the app...");
+    run_main();
 }
