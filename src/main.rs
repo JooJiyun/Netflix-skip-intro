@@ -1,23 +1,43 @@
 // Prevents additional console window on Windows in release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tray_icon::menu::MenuEvent;
-use winit::event_loop::EventLoop;
+use widestring::U16CString;
+use windows::{
+    core::PCWSTR,
+    Win32::{
+        Foundation::*,
+        System::Threading::{CreateMutexExW, CREATE_MUTEX_INITIAL_OWNER},
+    },
+};
 
-use netflix_skip::system::{System, SystemEvent};
+use netflix_skip::run_main;
 
 fn main() {
-    let event_loop = EventLoop::<SystemEvent>::with_user_event().build().unwrap();
+    unsafe {
+        let name = U16CString::from_str("Global\\MyRustAppSingleton").unwrap();
 
-    let proxy = event_loop.create_proxy();
-    MenuEvent::set_event_handler(Some(move |event| {
-        if let Err(e) = proxy.send_event(SystemEvent::SystemTrayEvent(event)) {
-            eprintln!("faile proxy send event : {:?}", e.to_string());
+        let handle = CreateMutexExW(
+            Some(std::ptr::null()),
+            PCWSTR(name.as_ptr()),
+            CREATE_MUTEX_INITIAL_OWNER,
+            0,
+        )
+        .unwrap_or_else(|e| {
+            eprintln!("failed to create mutex handle: {:?}", e);
+            std::process::exit(1);
+        });
+
+        if handle.is_invalid() {
+            eprintln!("failed to create mutex : invalid handle");
+            return;
         }
-    }));
 
-    let mut app = System::new();
-    if let Err(err) = event_loop.run_app(&mut app) {
-        println!("Error: {:?}", err);
+        if GetLastError() == ERROR_ALREADY_EXISTS {
+            eprintln!("another instance is already running.");
+            return;
+        }
+
+        println!("running the app...");
+        run_main();
     }
 }

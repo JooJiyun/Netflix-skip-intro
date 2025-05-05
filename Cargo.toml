@@ -8,6 +8,8 @@ uiautomation = "0.12.0"
 image = "0.25.6"
 tray-icon = "0.20.1"
 winit = "0.30.10"
+windows = { version = "0.54", features = ["Win32_Foundation", "Win32_System_Threading", "Win32_Security"] }
+widestring = "1.0"
 
 [build-dependencies]
 embed-resource = "3.0.2"

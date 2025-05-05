@@ -1,0 +1,2 @@
+// app.rc
+appicon ICON "resources/app-icon.ico"
