@@ -50,6 +50,7 @@ fn click_skip_intro() -> Result<()> {
         println!("found netflix tab");
         let skip_buttons = find_netflix_skip_button(&netflix_root)?;
         for skip_button in skip_buttons {
+            println!("found button : {:?}", skip_button);
             if skip_button.get_name()? == ELEMENT_NAME_SKIP_BUTTON {
                 println!("click skip button");
                 click_element(&skip_button)?;
@@ -78,7 +79,7 @@ fn find_netflix_skip_button(root: &UIElement) -> Result<Vec<UIElement>> {
         .create_matcher()
         .from(root.clone())
         .timeout(1000)
-        .depth(3)
+        .depth(10)
         .control_type(uiautomation::controls::ControlType::Button)
         .find_all()?)
 }
@@ -96,3 +97,43 @@ fn click_element(element: &UIElement) -> Result<()> {
 
     Ok(())
 }
+
+// use uiautomation::UITreeWalker;
+
+// fn print_all_element() -> Result<()> {
+//     // get root ui
+//     let automation: UIAutomation = UIAutomation::new()?;
+//     let root = automation.get_root_element()?;
+//     let walker = automation.create_tree_walker()?;
+
+//     // get process root ui element
+//     let process_ui_roots = automation
+//         .create_matcher()
+//         .from(root)
+//         .timeout(10000)
+//         .find_all()?;
+
+//     // get text
+//     for process_ui_root in process_ui_roots {
+//         print_element_recursive(&walker, &process_ui_root, 1)?;
+//     }
+
+//     Ok(())
+// }
+
+// fn print_element_recursive(walker: &UITreeWalker, element: &UIElement, level: usize) -> Result<()> {
+//     println!("{:?} {:?}", level, element);
+
+//     // 자식 탐색
+//     if let Ok(child) = walker.get_first_child(&element) {
+//         print_element_recursive(walker, &child, level + 1)?;
+
+//         let mut next = child;
+//         while let Ok(sibling) = walker.get_next_sibling(&next) {
+//             print_element_recursive(walker, &sibling, level + 1)?;
+//             next = sibling;
+//         }
+//     }
+
+//     Ok(())
+// }
