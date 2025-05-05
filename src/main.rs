@@ -13,6 +13,7 @@ use windows::{
 use netflix_skip::run_main;
 
 fn main() {
+    // run only single instance
     unsafe {
         let name = U16CString::from_str("Global\\MyRustAppSingleton").unwrap();
 
@@ -36,8 +37,8 @@ fn main() {
             eprintln!("another instance is already running.");
             return;
         }
-
-        println!("running the app...");
-        run_main();
     }
+
+    println!("running the app...");
+    run_main();
 }
