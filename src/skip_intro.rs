@@ -6,7 +6,7 @@ use uiautomation::Result;
 use uiautomation::{UIAutomation, UIElement};
 
 use crate::{
-    ELEMENT_NAME_NETFLIX, ELEMENT_NAME_SKIP_BUTTON, THREAD_CHECK_TIME_INTERVAL,
+    ELEMENT_NAME_NETFLIX, ELEMENT_NAME_SKIP_BUTTON, MOUSE_MOVE_TIME, THREAD_CHECK_TIME_INTERVAL,
     THREAD_NAME_NETFLIX_SKIP_INTRO,
 };
 
@@ -89,7 +89,7 @@ fn click_element(element: &UIElement) -> Result<()> {
     element.try_focus();
     let button_point = element.get_clickable_point()?;
     if let Some(point) = button_point {
-        let mouse = Mouse::default().move_time(50);
+        let mouse = Mouse::default().move_time(MOUSE_MOVE_TIME);
         mouse.click(point)?;
         mouse.move_to(click_prev_point)?;
     }
