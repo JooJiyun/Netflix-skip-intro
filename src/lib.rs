@@ -1,3 +1,4 @@
+mod single_instance;
 mod skip_intro;
 mod system;
 
@@ -9,7 +10,13 @@ const THREAD_CHECK_TIME_INTERVAL: std::time::Duration = std::time::Duration::fro
 
 const MOUSE_MOVE_TIME: u64 = 50;
 
+const SINGLE_INSTANCE_MUTEX: &str = "Global\\NetflixSkipSingleInstance";
+
 pub fn run_main() {
+    if !single_instance::check_single_instance() {
+        return;
+    }
+
     let event_loop = winit::event_loop::EventLoop::<system::SystemEvent>::with_user_event()
         .build()
         .unwrap();
